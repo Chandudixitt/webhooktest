@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout git') {
+            steps {
+                script {
+                    git branch: 'main', credentialsId: 'gitcreds', url: 'https://github.com/Chandudixitt/webhooktest.git'
+                }
+            }
+        }
+        stage('Docker build') {
+            steps {
+                script {
+                    sh 'docker build -t chanduboddula/httpdimg:1.1.1.3 .'
+                }
+            }
+        }
+        stage('Docker push image') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'dockercreds', variable: 'dockerusert')]) {
+                        sh 'docker login -u chanduboddula -p ${dockerusert}'
+                    }
+                    sh 'docker push chanduboddula/httpdimg:1.1.1.3'
+                }
+            }
+        }
+        stage('Docker run') {
+            steps {
+                script {
+                    sh 'docker run -d --name my_httpd_container -p 80:80 chanduboddula/httpdimg:1.1.1.3'
+                }
+            }
+        }
+    }
+}
